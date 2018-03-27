@@ -1,0 +1,6 @@
+---
+- name: Restart rh-mariadb102-mariadb
+  become: true
+  systemd:
+    name: rh-mariadb102-mariadb
+    state: restarted

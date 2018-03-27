@@ -1,0 +1,50 @@
+---
+- name: Install rh-mariadb102-mariadb-server-galera
+  become: true
+  package:
+    name: rh-mariadb102-mariadb-server-galera
+    state: latest
+
+- name: Put rh-mariadb102.sh
+  become: true
+  copy:
+    src: rh-mariadb102.sh
+    dest: /etc/profile.d/rh-mariadb102.sh
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Put mariadb-server.cnf for primary
+  become: true
+  template:
+    src: mariadb-primary-server.cnf.j2
+    dest: /etc/opt/rh/rh-mariadb102/my.cnf.d/mariadb-server.cnf
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+  when:
+    ansible_hostname == primary_hostname
+  notify:
+    - Restart rh-mariadb102-mariadb
+
+- name: Put mariadb-server.cnf for secondary
+  become: true
+  template:
+    src: mariadb-secondary-server.cnf.j2
+    dest: /etc/opt/rh/rh-mariadb102/my.cnf.d/mariadb-server.cnf
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+  when:
+    ansible_hostname != primary_hostname
+  notify:
+    - Restart rh-mariadb102-mariadb
+
+- name: Enable and start rh-mariadb102-mariadb
+  become: true
+  systemd:
+    name: rh-mariadb102-mariadb
+    enabled: yes
+    state: started
